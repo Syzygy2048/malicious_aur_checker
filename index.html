@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Compare installed Arch packages against a malicious AUR list in the browser."
+    />
+    <title>AUR checker</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <div class="hero-copy panel light-panel">
+          <h1>AUR checker</h1>
+          <p class="lede">
+            Compare installed package names against a malicious AUR list. The
+            check runs locally in the browser. This has been vibecoded. <br /><br />
+            Malicious AUR list is from <a href="https://md.archlinux.org/s/SxbqukK6IA" target="_blank" rel="noopener noreferrer">https://md.archlinux.org/s/SxbqukK6IA</a> - June 15th 2026, 5 AM GMT<br/>
+            As per <a href="https://discord.com/channels/399812551963049995/551248719681683456/1515093807690027168" target="_blank" rel="noopener noreferrer">this discord message</a> on the Arch Linux Community Discord Server (no relation, between the server and this website.)
+          </p>
+        </div>
+
+        <aside class="panel light-panel quick-status">
+          <div class="stat">
+            <span class="stat-label">Installed packages</span>
+            <span class="stat-value" id="input-count">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Malicious list</span>
+            <span class="stat-value" id="malicious-count">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Matches</span>
+            <span class="stat-value danger" id="match-count">0</span>
+          </div>
+        </aside>
+      </section>
+
+      <section class="panel light-panel commands">
+        <div class="section-heading">
+          <h2>Commands</h2>
+        </div>
+
+        <div class="command-grid">
+          <article class="command-card">
+            <span class="command-label">Foreign packages</span>
+            <div class="command-row">
+              <pre><code>pacman -Qqm</code></pre>
+              <button class="icon-button" type="button" data-copy="pacman -Qqm" aria-label="Copy">
+                ⧉
+              </button>
+            </div>
+            <div class="command-row">
+              <pre><code>pacman -Qqm | wl-copy</code></pre>
+              <button
+                class="icon-button"
+                type="button"
+                data-copy="pacman -Qqm | wl-copy"
+                aria-label="Copy"
+              >
+                ⧉
+              </button>
+            </div>
+          </article>
+
+          <article class="command-card">
+            <span class="command-label">All names</span>
+            <div class="command-row">
+              <pre><code>pacman -Qq</code></pre>
+              <button class="icon-button" type="button" data-copy="pacman -Qq" aria-label="Copy">
+                ⧉
+              </button>
+            </div>
+            <div class="command-row">
+              <pre><code>pacman -Qq | wl-copy</code></pre>
+              <button
+                class="icon-button"
+                type="button"
+                data-copy="pacman -Qq | wl-copy"
+                aria-label="Copy"
+              >
+                ⧉
+              </button>
+            </div>
+          </article>
+
+          <article class="command-card">
+            <span class="command-label">Versioned output</span>
+            <div class="command-row">
+              <pre><code>pacman -Q</code></pre>
+              <button class="icon-button" type="button" data-copy="pacman -Q" aria-label="Copy">
+                ⧉
+              </button>
+            </div>
+            <div class="command-row">
+              <pre><code>pacman -Q | wl-copy</code></pre>
+              <button
+                class="icon-button"
+                type="button"
+                data-copy="pacman -Q | wl-copy"
+                aria-label="Copy"
+              >
+                ⧉
+              </button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <section class="panel light-panel input-panel">
+          <div class="section-heading">
+            <h2>Installed packages</h2>
+          </div>
+          <label class="field-label" for="package-input">Paste package names</label>
+          <textarea
+            id="package-input"
+            name="package-input"
+            spellcheck="false"
+            placeholder="Paste pacman output here."
+          ></textarea>
+          <div class="actions">
+            <label class="button secondary" for="package-file">Upload file</label>
+            <input id="package-file" type="file" accept=".txt,.list,.log,text/plain" />
+            <button class="button primary" type="button" id="check-button">Check</button>
+            <button class="button ghost" type="button" id="clear-packages">Clear</button>
+          </div>
+        </section>
+
+        <section class="panel light-panel input-panel">
+          <div class="section-heading">
+            <h2>Malicious AUR list</h2>
+          </div>
+          <label class="field-label" for="malicious-input">Paste list or upload file</label>
+          <textarea
+            id="malicious-input"
+            name="malicious-input"
+            spellcheck="false"
+            placeholder="Paste package names here or load a list file."
+          ></textarea>
+          <div class="actions">
+            <label class="button secondary" for="malicious-file">Upload file</label>
+            <input id="malicious-file" type="file" accept=".txt,.list,.log,text/plain" />
+            <button class="button ghost" type="button" id="clear-malicious">Clear</button>
+          </div>
+        </section>
+      </section>
+
+      <section class="panel light-panel results-panel" aria-live="polite">
+        <div class="section-heading">
+          <h2>Matches</h2>
+        </div>
+        <div id="result-empty" class="empty-state">No matches.</div>
+        <div id="result-list" class="result-list" hidden></div>
+      </section>
+
+      <section class="panel light-panel browser-panel">
+        <div class="section-heading">
+          <h2>Malicious list</h2>
+        </div>
+        <div class="browser-tools">
+          <label class="search">
+            <span>Filter</span>
+            <input
+              id="list-filter"
+              type="search"
+              placeholder="Search package names"
+              autocomplete="off"
+            />
+          </label>
+        </div>
+        <div class="list-shell" role="region" aria-label="Malicious package list">
+          <ul id="list-browser" class="package-browser"></ul>
+        </div>
+      </section>
+    </main>
+
+    <template id="result-template">
+      <article class="result-card">
+        <div>
+          <h3 class="pkg-name"></h3>
+        </div>
+        <span class="badge">Match</span>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
